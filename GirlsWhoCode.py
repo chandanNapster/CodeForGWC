@@ -1,9 +1,11 @@
 import requests as rq
 import json as js
 from bs4 import BeautifulSoup
+from time import sleep
+from random import randint
 
-number = 34
-# nameList = []
+number = 8
+nameListMain = []
 
 
 def getUserInfo(url):
@@ -31,7 +33,13 @@ def getUserInfo(url):
 
 
 for i in range(number):
+
     i = i + 1
     url = "https://github.com/search?p={}&q=girlswhocode&type=Repositories".format(
         i)
-    print(getUserInfo(url))
+    nList = getUserInfo(url)
+    nameListMain.append(nList)
+    sleep(randint(2, 10))
+
+
+print(nameListMain)
