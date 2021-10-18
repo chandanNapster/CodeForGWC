@@ -5,63 +5,74 @@ from time import sleep
 from random import randint
 
 
-number = 1
+# GIT_HUB_SEARCH_STRING = "girlswhocode"
+GIT_HUB_SEARCH_STRING = "womenwhocode"
 nameListMain = []
-total_pages = 0
+FIRST_PAGE = 1
+MIN_WAIT_TIME = 4
+MAX_WAIT_TIME = 12
+URL = "https://github.com/search?p={0}&q={1}&type=Repositories"
 
 
-def getUserInfo(url):
-    nameList = []
+def getRequestToGithub(url):
     response = rq.get(url, headers={'User-agent': "Mozila"})
     response_code = response.status_code
     print("*************************************")
     if(response_code != 200):
         print("Error occured")
     else:
-        html_content = response.content
-        # Create a DOM model for HTML data obtained
-        dom = BeautifulSoup(html_content, 'html.parser')
-        all_repo = dom.select("ul.repo-list li div.d-flex div a")
-        tp = dom.select("em")
-        # INSTALL beautifulsoup4
-        total_pages = getTotalPages(tp)
-        print(total_pages)
-        for each_repo in all_repo:
-            name = each_repo.attrs["href"][1:]
-            href_link = "https://github.com/{}".format(name)
-            nameList.append(href_link)
+        return BeautifulSoup(response.content, 'html.parser')
+
+
+def fetchGithubMainPage():
+    url = URL.format(FIRST_PAGE, GIT_HUB_SEARCH_STRING)
+    # Create DOM model
+    dom = getRequestToGithub(url)
+    getAllUserData(int(getTotalPages(dom.select("em"))))
+    nameListMain = displayList()
+    print(nameListMain)
+
+
+def getUserInfo(url):
+    nameList = []
+    # Create a DOM model for HTML data obtained
+    dom = getRequestToGithub(url)
+    all_repo = dom.select("ul.repo-list li div.d-flex div a")
+    for each_repo in all_repo:
+        name = each_repo.attrs["href"][1:]
+        href_link = "https://github.com/{}".format(name)
+        nameList.append(href_link)
     return nameList
 
 
-def getTotalPages(ttl_pages):
-    pages = 0
-    for pages in ttl_pages:
-        tp = pages.attrs
-        if(not(bool(tp))):
-            continue
-        else:
-            pages = tp.get("data-total-pages")
-    return pages
-
-
-def queryGithub():
-    for i in range(number):
+def getAllUserData(total_pages):
+    print(total_pages)
+    for i in range(0, total_pages):
         i = i + 1
-        url = "https://github.com/search?p={}&q=girlswhocode&type=Repositories".format(
-            i)
+        url = URL.format(i, GIT_HUB_SEARCH_STRING)
+        print(url)
         nList = getUserInfo(url)
         nameListMain.append(nList)
-        sleep(randint(2, 8))
+        sleep(randint(MIN_WAIT_TIME, MAX_WAIT_TIME))
     return nameListMain
 
 
 def displayList():
     nameLst = []
-    listA = queryGithub()
-    for nl in listA:
+    for nl in nameListMain:
         for names in nl:
             nameLst.append(names)
     return nameLst
 
 
-print(displayList())
+def getTotalPages(pages):
+    for page in pages:
+        tp = page.attrs
+        if(not(bool(tp))):
+            continue
+        else:
+            total_pages = tp.get("data-total-pages")
+    return total_pages
+
+
+fetchGithubMainPage()
